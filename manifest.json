@@ -1,0 +1,18 @@
+{
+  "name": "Buku Tajwid Pintar",
+  "short_name": "TajwidAI",
+  "description": "Aplikasi Belajar Al-Qur'an dan Tajwid interaktif bertenaga AI.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#2c3e50",
+  "theme_color": "#4a6fa5",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

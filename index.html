@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buku Tajwid Pintar</title>
+  
+  <!-- PWA Setup -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4a6fa5">
+  <link rel="apple-touch-icon" href="icon.png">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* =========================================
+       BAGIAN CSS (TAMPILAN SOLID, MODERN & LEGA)
+       ========================================= */
+    body {
+      background-color: #2c3e50; 
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+    }
+
+    #offline-banner {
+      display: none; 
+      position: fixed; 
+      top: 0; left: 0; width: 100%; 
+      background-color: #c0392b; 
+      color: #ffffff; 
+      text-align: center; 
+      padding: 12px; 
+      font-weight: 700; 
+      font-size: 14px;
+      z-index: 9999;
+      border-bottom: 4px solid #922b21;
+      box-sizing: border-box;
+    }
+
+    .book-container {
+      display: flex;
+      width: 96vw;
+      max-width: 1300px; 
+      height: 94vh; 
+      background-color: #fcfaf5; /* Warna kertas sedikit lebih terang agar bersih */
+      box-shadow: 0 10px 0 #1a252f; 
+      border: 6px solid #34495e; /* Border luar sedikit ditipiskan */
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .page {
+      flex: 1;
+      position: relative;
+      padding: 20px 30px; 
+      box-sizing: border-box;
+      background-color: #fcfaf5;
+      display: flex;
+      flex-direction: column;
+      height: 100%; 
+      overflow: hidden;
+    }
+
+    .left-page { border-right: 3px solid #dcd1ba; border-left: 1px solid #e8e1cd; }
+    .right-page { border-left: 1px solid #e8e1cd; }
+
+    /* =========================================
+       TOMBOL MODE (MODERN SEGMENTED CONTROL)
+       ========================================= */
+    .mode-switcher {
+      background-color: #e8e1cd;
+      padding: 5px;
+      border-radius: 50px; /* Bentuk kapsul modern */
+      margin-bottom: 12px;
+      display: flex;
+      border: 2px solid #dcd1ba;
+    }
+    
+    .radio-label {
+      flex: 1;
+      cursor: pointer;
+      margin: 0;
+    }
+
+    .radio-label input[type="radio"] {
+      display: none; /* Sembunyikan lingkaran kaku bawaan browser */
+    }
+
+    .radio-label span {
+      display: block;
+      text-align: center;
+      padding: 8px 10px;
+      border-radius: 40px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #34495e;
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    .radio-label input[type="radio"]:checked + span {
+      background-color: #2c3e50;
+      color: #ffffff;
+      border: 2px solid #1a252f;
+      padding: 6px 8px; /* Kompensasi border agar ukuran tetap sama */
+    }
+
+    /* INPUT & DROPDOWN LEBIH CANTIK */
+    select, input[type="text"], input[type="number"], input[type="password"] {
+      width: 100%; 
+      padding: 10px 15px; 
+      border-radius: 8px; 
+      border: 2px solid #dcd1ba; 
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      background-color: #ffffff;
+      color: #2c3e50;
+      box-sizing: border-box;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    select:focus, input:focus {
+      border-color: #4a6fa5;
+    }
+
+    /* =========================================
+       ORNAMEN MUSHAF KLASIK (DIPERBAIKI)
+       ========================================= */
+    .mushaf-frame {
+      display: flex;
+      flex-direction: column;
+      flex: 1; 
+      min-height: 0; 
+      background-color: #fcfaf5;
+      border: 2px solid #2c3e50; 
+      padding: 20px 15px; /* Padding disesuaikan */
+      position: relative;
+      margin-bottom: 15px;
+      /* Box shadow disederhanakan agar tidak terlalu sesak */
+      box-shadow: inset 0 0 0 3px #4a6fa5, inset 0 0 0 5px #2c3e50, inset 0 0 0 10px #e8e1cd, inset 0 0 0 12px #2c3e50; 
+      overflow: hidden; 
+      border-radius: 6px;
+    }
+
+    .corner {
+      position: absolute; width: 22px; height: 22px; background-color: #4a6fa5; border: 2px solid #2c3e50; z-index: 5;
+    }
+    .corner-inner {
+      position: absolute; top: 3px; left: 3px; right: 3px; bottom: 3px; background-color: #e8e1cd; border: 2px solid #2c3e50; border-radius: 50%;
+    }
+    .corner-tl { top: 0; left: 0; border-bottom-right-radius: 12px; border-top: none; border-left: none; }
+    .corner-tr { top: 0; right: 0; border-bottom-left-radius: 12px; border-top: none; border-right: none; }
+    .corner-bl { bottom: 0; left: 0; border-top-right-radius: 12px; border-bottom: none; border-left: none; }
+    .corner-br { bottom: 0; right: 0; border-top-left-radius: 12px; border-bottom: none; border-right: none; }
+
+    .mushaf-header {
+      display: flex; justify-content: center; align-items: center; gap: 12px; 
+      background-color: #fcfaf5;
+      border: 2px solid #2c3e50; 
+      border-radius: 30px; 
+      padding: 6px 20px; 
+      margin: 5px auto 15px auto; /* Margin diatur agar tidak nabrak border */
+      font-family: 'Amiri Quran', serif; 
+      font-size: 22px; 
+      color: #2c3e50; 
+      width: fit-content; /* Lebar dinamis menyesuaikan isi */
+      max-width: 85%; /* Maksimal lebar agar aman di layar sempit */
+      box-shadow: inset 0 0 0 3px #4a6fa5, inset 0 0 0 5px #fcfaf5, 0 3px 0 #2c3e50; 
+      position: relative; 
+      z-index: 6; 
+      flex-shrink: 0; 
+    }
+
+    .islamic-star { display: block; width: 10px; height: 10px; background-color: #d35400; position: relative; }
+    .islamic-star::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: inherit; transform: rotate(45deg); }
+    .islamic-star::after { content: ""; position: absolute; top: 2px; left: 2px; width: 6px; height: 6px; background-color: #fcfaf5; border-radius: 50%; }
+
+    /* =========================================
+       AREA SCROLL TEKS ARAB & INFO BAWAH
+       ========================================= */
+    .arabic-scroll-area { flex: 1; overflow-y: auto; padding: 0 10px; display: flex; flex-direction: column; }
+    .arabic-text { font-family: 'Amiri Quran', serif; font-size: max(3.5vh, 26px); line-height: 2; text-align: justify; text-align-last: center; text-justify: inter-word; direction: rtl; margin: 0 0 15px 0; color: #111111; }
+    .keterangan-bawah { text-align: center; color: #4a6fa5; font-weight: bold; font-family: 'Inter', sans-serif; font-size: 13px; border-top: 2px dashed #dcd1ba; padding-top: 15px; margin-top: auto; padding-bottom: 5px; }
+    .terjemahan-teks { font-family: 'Inter', sans-serif; font-size: 14px; line-height: 1.6; color: #34495e; direction: ltr; text-align: left; text-align-last: left; background-color: #e8e1cd; padding: 12px 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #4a6fa5; display: block; }
+    .highlight-tajwid { color: #c0392b; font-weight: bold; }
+    .ayah-marker { color: #4a6fa5; font-weight: bold; font-size: 0.85em; margin: 0 5px;}
+    
+    .arabic-scroll-area::-webkit-scrollbar, .gemini-box::-webkit-scrollbar { width: 6px; }
+    .arabic-scroll-area::-webkit-scrollbar-track, .gemini-box::-webkit-scrollbar-track { background: transparent; }
+    .arabic-scroll-area::-webkit-scrollbar-thumb, .gemini-box::-webkit-scrollbar-thumb { background: #dcd1ba; border-radius: 10px; }
+
+    /* =========================================
+       KONTROL ANTARMUKA
+       ========================================= */
+    .controls-top { flex-shrink: 0; margin-bottom: 5px;}
+    .controls-bottom { flex-shrink: 0; margin-top: 10px; }
+    
+    .audio-btn { padding: 12px 15px; cursor: pointer; background-color: #27ae60; color: white; border: 2px solid #1e8449; border-radius: 8px; font-weight: 700; font-size: 14px; width: 100%; margin-bottom: 10px; transition: background-color 0.2s, transform 0.1s;}
+    .audio-btn:hover:not([disabled]) { background-color: #2ecc71; }
+    .audio-btn:active:not([disabled]) { transform: scale(0.98); }
+    .audio-btn[disabled] { background-color: #95a5a6; border-color: #7f8c8d; cursor: not-allowed; }
+    
+    .navigasi-container { display: flex; justify-content: space-between; align-items: center; border-top: 2px solid #dcd1ba; padding-top: 10px; }
+    .navigasi-container button { padding: 8px 15px; cursor: pointer; background-color: #ffffff; color: #2c3e50; border: 2px solid #dcd1ba; border-radius: 8px; font-weight: 700; font-size: 13px; transition: background-color 0.2s;}
+    .navigasi-container button:hover { background-color: #e8e1cd; }
+    
+    .gemini-controls { margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; flex-shrink: 0;}
+    .gemini-controls button { background-color: #2c3e50; color: white; cursor: pointer; font-weight: 700; border: 2px solid #1a252f; padding: 12px; border-radius: 8px; font-size: 14px; transition: background-color 0.2s, transform 0.1s;}
+    .gemini-controls button:hover:not([disabled]) { background-color: #1a252f; }
+    .gemini-controls button:active:not([disabled]) { transform: scale(0.98); }
+    .cetak-btn { background-color: #d35400 !important; border-color: #a04000 !important; margin-top: 5px; }
+    .cetak-btn:hover { background-color: #e67e22 !important; }
+    
+    .gemini-box { background-color: #ffffff; padding: 20px; border-radius: 12px; border: 3px solid #4a6fa5; box-shadow: inset 0 0 0 2px #dcd1ba; overflow-y: auto; flex: 1; min-height: 0; font-size: 15px; line-height: 1.7; color: #333; }
+    
+    .tutor-title { font-family: 'Inter', sans-serif; font-weight: 700; background-color: #4a6fa5; color: #ffffff; margin-top: 0; padding: 12px 18px; border-radius: 10px; border: 2px solid #2c3e50; box-shadow: 0 4px 0 #2c3e50; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+    
+    .status-indikator { font-size: 12px; font-weight: 800; background-color: #ffffff; padding: 4px 10px; border-radius: 20px; border: 2px solid #2c3e50; margin-right: 12px; }
+
+    .hasil-item { background: #fdfbf7; border: 2px solid #dcd1ba; border-radius: 10px; padding: 15px; margin-bottom: 15px; transition: border-color 0.2s; }
+    .hasil-item:hover { border-color: #4a6fa5; background: #ffffff;}
+    .btn-buka-ayat { background: #4a6fa5; color: white; border: 2px solid #2c3e50; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; display: inline-flex; align-items: center; gap: 5px; transition: transform 0.1s;}
+    .btn-buka-ayat:active { transform: scale(0.95); }
+
+    /* =========================================
+       MODAL PENGATURAN
+       ========================================= */
+    .modal-overlay { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: #2c3e50; justify-content: center; align-items: center; }
+    .modal-content { background-color: #fcfaf5; padding: 35px; border-radius: 12px; border: 6px solid #dcd1ba; outline: 4px solid #34495e; width: 90%; max-width: 500px; position: relative; }
+    .close-modal { position: absolute; top: 15px; right: 20px; font-size: 28px; font-weight: bold; color: #c0392b; cursor: pointer; }
+    .setting-group { margin-bottom: 20px; display: flex; flex-direction: column; }
+    .setting-group label { font-weight: 700; color: #2c3e50; margin-bottom: 8px; font-size: 14px;}
+    .api-guide { font-size: 12px; color: #7f8c8d; margin-top: 8px; line-height: 1.5; }
+    .api-guide a { color: #2980b9; text-decoration: none; font-weight: bold; }
+    
+    /* Toggle Terjemahan Modern */
+    .checkbox-container { display: flex; align-items: center; gap: 12px; cursor: pointer; background: #e8e1cd; padding: 12px; border-radius: 8px; border: 2px solid #dcd1ba;}
+    .checkbox-container input { width: 20px; height: 20px; margin: 0; cursor: pointer; }
+    .checkbox-container label { margin: 0; cursor: pointer; font-size: 14px; font-weight: 700; color: #2c3e50;}
+
+    /* =========================================
+       TATA LETAK RESPONSIVE (KHUSUS LAYAR HP)
+       ========================================= */
+    @media (max-width: 768px) {
+      body { height: auto; padding: 0; display: block; }
+      .book-container { flex-direction: column; height: auto; width: 100vw; margin: 0; border: none; border-radius: 0; box-shadow: none;}
+      .page { height: auto; overflow: visible; padding: 15px; }
+      
+      .left-page { border: none; border-bottom: 6px solid #dcd1ba; }
+      .right-page { border: none; }
+      
+      /* Merampingkan frame agar teks lebih lega di HP */
+      .mushaf-frame { 
+        height: auto; overflow: visible; flex: none; 
+        padding: 15px 10px; 
+        box-shadow: inset 0 0 0 2px #4a6fa5, inset 0 0 0 4px #2c3e50; /* Border sangat ditipiskan */
+      }
+      .mushaf-header { 
+        width: 90%; 
+        font-size: 18px; 
+        padding: 6px 10px;
+        margin-top: 8px; /* Mencegah tabrakan dengan corner */
+      }
+      .corner { width: 15px; height: 15px; }
+      .corner-inner { top: 2px; left: 2px; right: 2px; bottom: 2px; }
+      
+      .arabic-scroll-area { min-height: 45vh; padding: 0 5px; }
+      .arabic-text { font-size: 24px; line-height: 2.2;}
+      .gemini-box { min-height: 50vh; }
+      
+      .navigasi-container { flex-wrap: wrap; gap: 10px; justify-content: center; }
+      .status-indikator { display: none; }
+      .tutor-title { font-size: 16px; padding: 12px; }
+    }
+
+    /* =========================================
+       STYLING KHUSUS MODE CETAK PDF
+       ========================================= */
+    @media print {
+      @page { size: landscape; margin: 10mm; }
+      body { background-color: #ffffff; height: auto; align-items: flex-start; display: block; }
+      #offline-banner { display: none !important; }
+      .book-container { width: 100vw; max-width: none; height: auto; box-shadow: none; border: 2px solid #2c3e50; border-radius: 0; background-color: #ffffff; display: flex; flex-direction: row; }
+      .page { background-color: #ffffff; padding: 20px; height: auto; overflow: visible; }
+      .controls-top, .controls-bottom, .gemini-controls, #btn-setting, .status-indikator { display: none !important; }
+      .mushaf-frame, .arabic-scroll-area, .gemini-box { overflow: visible !important; height: auto !important; flex: none; display: block; border-width: 2px;}
+      .mushaf-frame { border-color: #2c3e50; background-color: #ffffff; box-shadow: none; outline: none; }
+      .mushaf-header { border-color: #2c3e50; background-color: #ffffff; box-shadow: none; }
+      .corner { border-color: #2c3e50; }
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Banner Peringatan Offline -->
+  <div id="offline-banner">
+    ⚠️ Koneksi Internet Terputus! Aplikasi membutuhkan internet untuk memuat ayat dan menghubungi Guru Tajwid.
+  </div>
+
+  <div class="book-container">
+    
+    <!-- Halaman Kiri (Data Al-Qur'an) -->
+    <div class="page left-page">
+      
+      <!-- KONTROL ATAS -->
+      <div class="controls-top">
+        
+        <!-- Mode Switcher Modern -->
+        <div class="mode-switcher">
+          <label class="radio-label">
+            <input type="radio" name="mode-baca" value="ayat" checked> 
+            <span>Mode Per Ayat</span>
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="mode-baca" value="halaman"> 
+            <span>Mode Per Halaman</span>
+          </label>
+        </div>
+
+        <div id="kontrol-ayat" style="margin-bottom: 8px;">
+          <select id="pilih-surah"></select>
+        </div>
+        
+        <div id="kontrol-halaman" style="display: none; margin-bottom: 8px;">
+          <input type="number" id="input-halaman" placeholder="Lompat ke Halaman (1 - 604)" min="1" max="604" value="1">
+        </div>
+      </div>
+
+      <!-- BINGKAI MUSHAF KLASIK GEOMETRIS -->
+      <div class="mushaf-frame">
+        <div class="corner corner-tl"><div class="corner-inner"></div></div>
+        <div class="corner corner-tr"><div class="corner-inner"></div></div>
+        <div class="corner corner-bl"><div class="corner-inner"></div></div>
+        <div class="corner corner-br"><div class="corner-inner"></div></div>
+        
+        <div class="mushaf-header">
+           <div class="islamic-star"></div>
+           <span id="teks-nama-surah">سورة ...</span>
+           <div class="islamic-star"></div>
+        </div>
+        
+        <!-- Area Teks Bisa di-Scroll -->
+        <div class="arabic-scroll-area">
+          <div id="teks-arab" class="arabic-text"></div>
+          <div id="keterangan-bawah" class="keterangan-bawah">Memuat data...</div>
+        </div>
+      </div>
+      
+      <!-- KONTROL BAWAH (Selalu Terlihat) -->
+      <div class="controls-bottom">
+        <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+          <label for="pilih-qori" style="font-size: 13px; font-weight: 700; color: #2c3e50; white-space: nowrap;">🎙️ Qori:</label>
+          <select id="pilih-qori">
+            <option value="alafasy">Mishary Rashid Al-Afasy</option>
+            <option value="sudais">Abdurrahman as-Sudais</option>
+          </select>
+        </div>
+
+        <button id="btn-play" class="audio-btn" disabled>▶ Putar Audio</button>
+        <audio id="audio-player"></audio>
+
+        <div class="navigasi-container">
+          <button id="btn-prev">◄ Sebelumnya</button>
+          <span id="info-navigasi" style="font-size: 12px; font-weight: 700; color: #7f8c8d;">Info</span>
+          <button id="btn-next">Selanjutnya ►</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Halaman Kanan (Tutor Gemini) -->
+    <div class="page right-page">
+      <h3 class="tutor-title">
+        <span>Ruang Guru Tajwid</span>
+        
+        <!-- Penambahan Container untuk Status dan Setting -->
+        <div style="display: flex; align-items: center;">
+          <span id="status-permanen" class="status-indikator">🟢 Online</span>
+          <button id="btn-setting" style="background: none; border: none; font-size: 22px; cursor: pointer; padding: 0; color: white;" title="Pengaturan">⚙️</button>
+        </div>
+      </h3>
+      
+      <div class="gemini-controls">
+        <select id="mode-tajwid">
+          <option value="semua">📖 Analisis Semua Tajwid di Ayat Ini</option>
+          <option value="spesifik">🎯 Cek 1 Hukum Spesifik di Ayat Ini...</option>
+          <option value="cari-contoh">🔍 Cari Contoh Ayat di Seluruh Al-Qur'an...</option>
+        </select>
+        
+        <input type="text" id="input-tajwid" placeholder="Misal: Ikhfa, Idgham Bighunnah, Mad Wajib" style="display: none;">
+        
+        <button id="btn-analisis">Tanya Guru Tajwid Sekarang</button>
+        <button id="btn-cetak" class="cetak-btn">💾 Ekspor Materi ke PDF</button>
+      </div>
+      
+      <!-- Area Scroll Hasil Gemini -->
+      <div class="gemini-box" id="kotak-hasil">
+        <div style="text-align: center; margin-top: 40px; color: #7f8c8d;">
+          <p style="font-size: 32px; margin-bottom: 10px;">🕋</p>
+          <p style="font-style: italic; font-size: 14px;">Assalamu'alaikum!<br>Pilih menu di atas lalu klik tombol <b>Tanya Guru Tajwid</b> untuk memulai belajar.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- =========================================
+       MODAL PENGATURAN
+       ========================================= -->
+  <div id="modal-pengaturan" class="modal-overlay">
+    <div class="modal-content">
+      <span class="close-modal" id="btn-close-modal">&times;</span>
+      <h3 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #dcd1ba; padding-bottom: 15px; margin-bottom: 20px;">⚙️ Pengaturan Aplikasi</h3>
+      
+      <div class="setting-group">
+        <label for="input-api-key">Kunci API Gemini (Gemini API Key):</label>
+        <input type="password" id="input-api-key" placeholder="Paste API Key Anda di sini...">
+        <p class="api-guide">
+          Sistem membutuhkan API Key agar fitur Guru Tajwid berfungsi. 
+          <a href="https://aistudio.google.com/app/apikey" target="_blank">Klik di sini untuk membuat API Key GRATIS di Google AI Studio</a>.
+        </p>
+      </div>
+
+      <div class="setting-group">
+        <div class="checkbox-container">
+          <input type="checkbox" id="toggle-terjemahan">
+          <label for="toggle-terjemahan">Tampilkan Terjemahan (Bahasa Indonesia)</label>
+        </div>
+      </div>
+
+      <button id="btn-simpan-pengaturan" class="audio-btn" style="margin-bottom: 0;">💾 Simpan Pengaturan</button>
+    </div>
+  </div>
+
+  <!-- =========================================
+       BAGIAN JAVASCRIPT (LOGIKA & API)
+       ========================================= -->
+  <script>
+    // =========================================
+    // 0. DETEKSI STATUS KONEKSI INTERNET
+    // =========================================
+    const elOfflineBanner = document.getElementById('offline-banner');
+    const elStatusPermanen = document.getElementById('status-permanen');
+    
+    function updateOnlineStatus() {
+      if (navigator.onLine) {
+        elOfflineBanner.style.display = 'none';
+        elStatusPermanen.innerHTML = '🟢 Online';
+        elStatusPermanen.style.color = '#27ae60';
+      } else {
+        elOfflineBanner.style.display = 'block';
+        elStatusPermanen.innerHTML = '🔴 Offline';
+        elStatusPermanen.style.color = '#c0392b';
+      }
+    }
+    
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
+
+    // =========================================
+    // 1. ELEMEN DOM & STATE
+    // =========================================
+    const elRadioMode = document.querySelectorAll('input[name="mode-baca"]');
+    const elKontrolAyat = document.getElementById('kontrol-ayat');
+    const elKontrolHalaman = document.getElementById('kontrol-halaman');
+    const elPilihSurah = document.getElementById('pilih-surah');
+    const elInputHalaman = document.getElementById('input-halaman');
+    const elPilihQori = document.getElementById('pilih-qori');
+    
+    const elTeksNamaSurah = document.getElementById('teks-nama-surah'); 
+    const elTeksArab = document.getElementById('teks-arab');
+    const elKeteranganBawah = document.getElementById('keterangan-bawah');
+    
+    const elBtnPlay = document.getElementById('btn-play');
+    const elAudioPlayer = document.getElementById('audio-player');
+    const elBtnPrev = document.getElementById('btn-prev');
+    const elBtnNext = document.getElementById('btn-next');
+    const elInfoNavigasi = document.getElementById('info-navigasi');
+    
+    const elModePilihan = document.getElementById('mode-tajwid');
+    const elInputSpesifik = document.getElementById('input-tajwid');
+    const elBtnAnalisis = document.getElementById('btn-analisis');
+    const elBtnCetak = document.getElementById('btn-cetak');
+    const elKotakHasil = document.getElementById('kotak-hasil');
+
+    const elBtnSetting = document.getElementById('btn-setting');
+    const elModalPengaturan = document.getElementById('modal-pengaturan');
+    const elBtnCloseModal = document.getElementById('btn-close-modal');
+    const elInputApiKey = document.getElementById('input-api-key');
+    const elToggleTerjemahan = document.getElementById('toggle-terjemahan');
+    const elBtnSimpanPengaturan = document.getElementById('btn-simpan-pengaturan');
+
+    const daftarQori = {
+      'alafasy': { equran: '05', cloud: 'ar.alafasy' },
+      'sudais': { equran: '03', cloud: 'ar.abdurrahmaansudais' }
+    };
+
+    let modeAktif = 'ayat';
+    let dataSurahSekarang = null;
+    let ayatAktif = 0; 
+    let audioPlaylist = [];
+    let audioIndex = 0;
+    window.kataHighlightGlobal = "";
+
+    let USER_API_KEY = localStorage.getItem('gemini_api_key') || "";
+    let SHOW_TERJEMAHAN = localStorage.getItem('show_terjemahan') === 'true';
+
+    elInputApiKey.value = USER_API_KEY;
+    elToggleTerjemahan.checked = SHOW_TERJEMAHAN;
+
+    function konversiAngkaArab(num) {
+      const id = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+      return num.toString().split('').map(n => id[n]).join('');
+    }
+
+    // =========================================
+    // 2. LOGIKA MODAL PENGATURAN & CETAK
+    // =========================================
+    elBtnSetting.addEventListener('click', () => { elModalPengaturan.style.display = 'flex'; });
+    elBtnCloseModal.addEventListener('click', () => { elModalPengaturan.style.display = 'none'; });
+    
+    elBtnSimpanPengaturan.addEventListener('click', () => {
+      USER_API_KEY = elInputApiKey.value.trim();
+      SHOW_TERJEMAHAN = elToggleTerjemahan.checked;
+      localStorage.setItem('gemini_api_key', USER_API_KEY);
+      localStorage.setItem('show_terjemahan', SHOW_TERJEMAHAN);
+      elModalPengaturan.style.display = 'none';
+      
+      if (modeAktif === 'ayat' && dataSurahSekarang) tampilkanAyat(ayatAktif);
+      else if (modeAktif === 'halaman') muatHalamanMushaf(parseInt(elInputHalaman.value) || 1);
+    });
+
+    elBtnCetak.addEventListener('click', () => { window.print(); });
+
+    // =========================================
+    // 3. FUNGSI PEWARNAAN TAJWID
+    // =========================================
+    function highlightArabic(text, phraseToHighlight) {
+      if (!phraseToHighlight) return text;
+      if (text.includes(phraseToHighlight)) return text.replace(phraseToHighlight, `<span class="highlight-tajwid">${phraseToHighlight}</span>`);
+      
+      const stripHarakat = (str) => str.replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]/g, '');
+      const cleanTargetWords = stripHarakat(phraseToHighlight).split(/\s+/).filter(w => w.length > 0);
+      
+      let ayatWords = text.split(/\s+/);
+      let matchedIndices = new Set();
+      
+      ayatWords.forEach((ayatWord, idx) => {
+        let cleanAyatWord = stripHarakat(ayatWord);
+        cleanTargetWords.forEach(targetWord => {
+          if (cleanAyatWord.includes(targetWord) || targetWord.includes(cleanAyatWord)) {
+            if(targetWord.length > 1) matchedIndices.add(idx);
+          }
+        });
+      });
+      
+      return ayatWords.map((w, idx) => matchedIndices.has(idx) ? `<span class="highlight-tajwid">${w}</span>` : w).join(' ');
+    }
+
+    // =========================================
+    // 4. LOGIKA MODE BACA, NAVIGASI & QORI
+    // =========================================
+    elRadioMode.forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        modeAktif = e.target.value;
+        elAudioPlayer.pause();
+        elBtnPlay.innerText = "▶ Putar Audio";
+        window.kataHighlightGlobal = ""; 
+        
+        elKontrolAyat.style.display = 'none';
+        elKontrolHalaman.style.display = 'none';
+
+        if (modeAktif === 'ayat') {
+          elKontrolAyat.style.display = 'block';
+          if (dataSurahSekarang) tampilkanAyat(ayatAktif);
+        } else if (modeAktif === 'halaman') {
+          elKontrolHalaman.style.display = 'block';
+          muatHalamanMushaf(parseInt(elInputHalaman.value) || 1);
+        }
+      });
+    });
+
+    elBtnPrev.addEventListener('click', () => {
+      window.kataHighlightGlobal = ""; 
+      if (modeAktif === 'ayat') {
+        if (ayatAktif > 0) tampilkanAyat(ayatAktif - 1);
+      } else if (modeAktif === 'halaman') {
+        let hal = parseInt(elInputHalaman.value);
+        if (hal > 1) { hal--; elInputHalaman.value = hal; muatHalamanMushaf(hal); }
+      }
+    });
+
+    elBtnNext.addEventListener('click', () => {
+      window.kataHighlightGlobal = ""; 
+      if (modeAktif === 'ayat') {
+        if (dataSurahSekarang && ayatAktif < dataSurahSekarang.ayat.length - 1) {
+          tampilkanAyat(ayatAktif + 1);
+        }
+      } else if (modeAktif === 'halaman') {
+        let hal = parseInt(elInputHalaman.value);
+        if (hal < 604) { hal++; elInputHalaman.value = hal; muatHalamanMushaf(hal); }
+      }
+    });
+
+    elInputHalaman.addEventListener('change', (e) => {
+      window.kataHighlightGlobal = ""; 
+      let hal = parseInt(e.target.value);
+      if(hal >= 1 && hal <= 604) muatHalamanMushaf(hal);
+    });
+
+    elPilihQori.addEventListener('change', () => {
+      elAudioPlayer.pause(); elBtnPlay.innerText = "▶ Putar Audio";
+      if (modeAktif === 'ayat' && dataSurahSekarang) tampilkanAyat(ayatAktif);
+      else if (modeAktif === 'halaman') muatHalamanMushaf(parseInt(elInputHalaman.value) || 1);
+    });
+
+    // =========================================
+    // 5. FUNGSI FETCH DATA AL-QUR'AN
+    // =========================================
+    async function muatDaftarSurah() {
+      try {
+        const res = await fetch('https://equran.id/api/v2/surat');
+        const data = await res.json();
+        if (data.code === 200) {
+          elPilihSurah.innerHTML = data.data.map(s => `<option value="${s.nomor}">${s.nomor}.${s.namaLatin}</option>`).join('');
+        }
+      } catch (err) { console.error(err); }
+    }
+
+    async function muatSurah(nomorSurah, indexAyat = 0) {
+      if (!navigator.onLine) return;
+      try {
+        elTeksNamaSurah.innerText = "جاري التحميل...";
+        const res = await fetch(`https://equran.id/api/v2/surat/${nomorSurah}`);
+        const data = await res.json();
+        if (data.code === 200) { dataSurahSekarang = data.data; tampilkanAyat(indexAyat); }
+      } catch (err) { elTeksNamaSurah.innerText = "Gagal memuat."; }
+    }
+
+    function tampilkanAyat(index) {
+      const ayat = dataSurahSekarang.ayat[index];
+      ayatAktif = index;
+      
+      elTeksNamaSurah.innerText = `سورة ${dataSurahSekarang.namaLatin}`; 
+      
+      let teksDasar = ayat.teksArab;
+      if (window.kataHighlightGlobal) {
+        teksDasar = highlightArabic(teksDasar, window.kataHighlightGlobal);
+      }
+
+      let htmlTeks = teksDasar + ` <span class="ayah-marker">﴿${konversiAngkaArab(ayat.nomorAyat)}﴾</span>`;
+      if (SHOW_TERJEMAHAN && ayat.teksIndonesia) {
+        htmlTeks += `<div class="terjemahan-teks">${ayat.teksIndonesia}</div>`;
+      }
+      
+      elTeksArab.innerHTML = htmlTeks;
+      elKeteranganBawah.innerHTML = `Surah ${dataSurahSekarang.namaLatin} - Ayat${ayat.nomorAyat}`;
+      elInfoNavigasi.innerText = `Posisi: Ayat ${ayat.nomorAyat} /${dataSurahSekarang.ayat.length}`;
+      
+      const qori = daftarQori[elPilihQori.value];
+      audioPlaylist = [ayat.audio[qori.equran]]; audioIndex = 0;
+      elAudioPlayer.src = audioPlaylist[0]; elBtnPlay.removeAttribute('disabled');
+      resetKotakGemini();
+      
+      document.querySelector('.arabic-scroll-area').scrollTop = 0;
+    }
+
+    elPilihSurah.addEventListener('change', (e) => {
+      window.kataHighlightGlobal = ""; 
+      if(modeAktif === 'ayat') muatSurah(e.target.value, 0);
+    });
+
+    async function muatHalamanMushaf(nomor) {
+      if (!navigator.onLine) return;
+      try {
+        elTeksNamaSurah.innerText = `...`;
+        elTeksArab.innerHTML = ""; elBtnPlay.disabled = true;
+        elKeteranganBawah.innerHTML = "Memuat halaman...";
+
+        const qori = daftarQori[elPilihQori.value];
+        const res = await fetch(`https://api.alquran.cloud/v1/page/${nomor}/quran-uthmani`);
+        const data = await res.json();
+        const resAudio = await fetch(`https://api.alquran.cloud/v1/page/${nomor}/${qori.cloud}`);
+        const dataAudio = await resAudio.json();
+        
+        let dataTerjemahan = null;
+        if (SHOW_TERJEMAHAN) {
+           const resTerj = await fetch(`https://api.alquran.cloud/v1/page/${nomor}/id.indonesian`);
+           const jsonTerj = await resTerj.json();
+           if(jsonTerj.code === 200) dataTerjemahan = jsonTerj.data.ayahs;
+        }
+
+        if (data.code === 200) {
+          const ayahs = data.data.ayahs;
+          const surahNamesAr = [...new Set(ayahs.map(a => a.surah.name))].join(" و ");
+          const surahNamesEn = [...new Set(ayahs.map(a => a.surah.englishName))].join(", ");
+          
+          elTeksNamaSurah.innerText = surahNamesAr;
+          
+          let fullText = "";
+          ayahs.forEach((a, index) => { 
+            let htmlTerj = (SHOW_TERJEMAHAN && dataTerjemahan) ? `<div class="terjemahan-teks">${dataTerjemahan[index].text}</div>` : '';
+            fullText += a.text + ` <span class="ayah-marker">﴿${konversiAngkaArab(a.numberInSurah)}﴾</span> ` + htmlTerj; 
+          });
+          
+          elTeksArab.innerHTML = fullText;
+          elKeteranganBawah.innerHTML = `Surah: ${surahNamesEn} - Halaman${nomor}`;
+          elInfoNavigasi.innerText = `Posisi: Hal ${nomor} / 604`;
+
+          audioPlaylist = dataAudio.data.ayahs.map(a => a.audio); audioIndex = 0;
+          if (audioPlaylist.length > 0) { elAudioPlayer.src = audioPlaylist[0]; elBtnPlay.removeAttribute('disabled'); }
+          resetKotakGemini();
+          
+          document.querySelector('.arabic-scroll-area').scrollTop = 0;
+        }
+      } catch (err) { elKeteranganBawah.innerText = "Gagal memuat halaman."; }
+    }
+
+    // =========================================
+    // 6. LOGIKA KLIK DAFTAR PENCARIAN
+    // =========================================
+    window.bukaHasilPencarian = function(surah, ayat, kataArab) {
+      window.kataHighlightGlobal = kataArab;
+      document.querySelector('input[value="ayat"]').click(); 
+      elPilihSurah.value = surah; 
+      muatSurah(surah, ayat - 1);
+    };
+
+    // =========================================
+    // 7. LOGIKA AUDIO & RESET KOTAK GEMINI
+    // =========================================
+    elBtnPlay.addEventListener('click', () => {
+      if (elAudioPlayer.paused) { elAudioPlayer.play(); elBtnPlay.innerText = "⏸ Jeda Audio"; } 
+      else { elAudioPlayer.pause(); elBtnPlay.innerText = "▶ Putar Audio"; }
+    });
+
+    elAudioPlayer.addEventListener('ended', () => {
+      if (modeAktif === 'halaman' && audioIndex < audioPlaylist.length - 1) {
+        audioIndex++; elAudioPlayer.src = audioPlaylist[audioIndex]; elAudioPlayer.play();
+      } else { elBtnPlay.innerText = "▶ Putar Audio"; }
+    });
+
+    function resetKotakGemini() {
+      if (elModePilihan.value !== 'cari-contoh' || elKotakHasil.innerHTML.includes('hasil-item')) {
+        if(!elKotakHasil.innerHTML.includes('hasil-item')){
+           elKotakHasil.innerHTML = `
+            <div style="text-align: center; margin-top: 40px; color: #7f8c8d;">
+              <p style="font-size: 32px; margin-bottom: 10px;">📖</p>
+              <p style="font-style: italic; font-size: 14px;">Ayat berganti. Klik tombol <b>Tanya Guru Tajwid</b> di atas untuk mempelajari tajwid bagian ini!</p>
+            </div>
+          `;
+        }
+      }
+    }
+
+    // =========================================
+    // 8. FUNGSI GEMINI AI UTAMA (OTAK SISTEM)
+    // =========================================
+    elModePilihan.addEventListener('change', (e) => {
+      if (e.target.value === 'semua') {
+        elInputSpesifik.style.display = 'none';
+      } else if (e.target.value === 'spesifik') {
+        elInputSpesifik.style.display = 'block'; elInputSpesifik.placeholder = "Ketik hukum yang ingin dicek. Misal: Ikhfa";
+      } else if (e.target.value === 'cari-contoh') {
+        elInputSpesifik.style.display = 'block'; elInputSpesifik.placeholder = "Ketik hukum untuk dicari di seluruh Quran...";
+      }
+    });
+
+    elBtnAnalisis.addEventListener('click', async () => {
+      if (!navigator.onLine) {
+        elKotakHasil.innerHTML = "<p style='color:#c0392b; font-weight:bold; text-align:center;'>Afwan, koneksi internet Anda terputus. Silakan periksa jaringan Anda lalu coba lagi.</p>"; 
+        return;
+      }
+
+      const mode = elModePilihan.value;
+      const teksAyat = elTeksArab.innerText; 
+      let promptGemini = "";
+
+      if (!USER_API_KEY || USER_API_KEY === "") {
+        elKotakHasil.innerHTML = "<p style='color:red; font-weight:bold; text-align:center;'>Error: API Key belum diisi!<br>Silakan klik tombol ⚙️ Pengaturan di atas.</p>"; 
+        return;
+      }
+
+      elKotakHasil.innerHTML = `
+        <div style="text-align: center; margin-top: 40px; color: #2c3e50;">
+          <p style="font-size: 32px; margin-bottom: 10px;">⏳</p>
+          <p><em>Guru Tajwid sedang menyiapkan data... Mohon tunggu sebentar ya.</em></p>
+        </div>
+      `;
+      elBtnAnalisis.disabled = true;
+
+      const personaGuru = "Anda adalah guru ngaji (Tutor Tajwid) yang sangat ramah, memotivasi, dan sabar. Gunakan bahasa Indonesia yang santai tapi sopan.";
+
+      if (mode === 'semua') {
+        promptGemini = `${personaGuru} Tolong analisis SEMUA hukum tajwid utama pada ayat ini: "${teksAyat}". 
+        Gunakan format HTML murni seperti <ul>, <li>, dan <b> untuk menebalkan kata Arabnya. Jangan pernah menggunakan markdown backtick (\`\`\`).`;
+      } 
+      else if (mode === 'spesifik') {
+        if (!elInputSpesifik.value) { elKotakHasil.innerHTML = "<p style='color:red;'>Isi nama tajwidnya dulu ya!</p>"; elBtnAnalisis.disabled = false; return; }
+        promptGemini = `${personaGuru} Tolong periksa dan jelaskan dengan ramah apakah ada hukum ${elInputSpesifik.value} pada ayat ini: ${teksAyat}. Gunakan format HTML murni. Jangan pakai backtick.`;
+      } 
+      else if (mode === 'cari-contoh') {
+        if (!elInputSpesifik.value) { elKotakHasil.innerHTML = "<p style='color:red;'>Ketik hukum tajwid yang ingin dicari!</p>"; elBtnAnalisis.disabled = false; return; }
+        
+        promptGemini = `Anda adalah mesin database Al-Qur'an dan guru Tajwid ahli. Carikan SEBANYAK MUNGKIN contoh ayat (sampai batas kemampuan output Anda, maksimal 30 contoh) di seluruh Al-Qur'an yang PASTI mengandung hukum tajwid "${elInputSpesifik.value}".
+        
+        PENTING: Anda HANYA boleh merespons dengan format array JSON murni, TANPA kalimat pembuka/penutup, TANPA markdown backtick. Strukturnya wajib persis seperti ini:
+        [
+          { 
+            "surah": 2, 
+            "ayat": 5, 
+            "kata_arab": "Tulis bagian kata Arabnya SAJA yang mengandung tajwid tersebut (cukup 1-2 kata agar bisa di-highlight oleh sistem).", 
+            "penjelasan": "Tuliskan penjelasan tajwid yang ramah. Gunakan HTML <b>...</b> untuk penekanan kata." 
+          }
+        ]`;
+      }
+
+      const daftarModel = ["gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.6-flash"];
+      let hasilTeks = null;
+      let modelDigunakan = "";
+
+      for (const model of daftarModel) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${USER_API_KEY}`;
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: promptGemini }] }] })
+          });
+          const data = await response.json();
+          if (data.error) throw new Error(data.error.message); 
+
+          hasilTeks = data.candidates[0].content.parts[0].text;
+          modelDigunakan = model;
+          break; 
+        } catch (error) { console.warn(`Gagal memuat dari ${model}: ${error.message}`); }
+      }
+
+      if (hasilTeks) {
+        if (mode === 'cari-contoh') {
+          try {
+            let jsonBersih = hasilTeks.replace(/```json/gi, '').replace(/```html/gi, '').replace(/```/g, '').trim();
+            let hasilArray = JSON.parse(jsonBersih);
+            
+            let listHtml = `
+              <div style="font-size: 11px; color: #27ae60; margin-bottom: 15px; text-align: right; border-bottom: 2px solid #e8e1cd; padding-bottom: 8px;">
+                <i>✅ Ditemukan ${hasilArray.length} ayat oleh <b>${modelDigunakan}</b></i>
+              </div>
+              <p style="color: #2c3e50; font-weight: 600; margin-top: 0;">Klik tombol untuk membuka dan mempelajari ayatnya:</p>
+            `;
+            
+            hasilArray.forEach((item) => {
+              listHtml += `
+                <div class="hasil-item">
+                  <button class="btn-buka-ayat" onclick="bukaHasilPencarian(${item.surah}, ${item.ayat}, '${item.kata_arab}')">
+                    📖 Buka Surah ke-${item.surah} Ayat ${item.ayat}
+                  </button>
+                  <p style="margin: 10px 0 5px 0; font-size: 14px;"><b>Kata:</b> <span style="font-family:'Amiri Quran',serif; font-size:20px; color:#c0392b; margin-left: 5px;">${item.kata_arab}</span></p>
+                  <p style="margin: 0; font-size: 14px; line-height: 1.5; color: #34495e;">${item.penjelasan}</p>
+                </div>
+              `;
+            });
+            
+            elKotakHasil.innerHTML = listHtml;
+            
+          } catch (err) {
+            elKotakHasil.innerHTML = `<p style="color:#c0392b; text-align:center;"><b>Maaf, format data dari server tidak sempurna.</b><br>Terkadang data yang dikirim terlalu banyak sehingga terpotong. Silakan klik tombol <b>Tanya Guru</b> sekali lagi.</p>`;
+          }
+        } else {
+          hasilTeks = hasilTeks.replace(/```html/g, '').replace(/```/g, '');
+          elKotakHasil.innerHTML = `
+            <div style="font-size: 11px; color: #27ae60; margin-bottom: 15px; text-align: right; border-bottom: 2px solid #e8e1cd; padding-bottom: 8px;">
+              <i>✅ Dijawab oleh <b>${modelDigunakan}</b></i>
+            </div>
+            ${hasilTeks}
+          `;
+        }
+      } else {
+        elKotakHasil.innerHTML = `<p style="color:red; font-weight:bold; text-align:center;">Gagal terhubung dengan Guru Tajwid. Periksa API Key di pengaturan dan pastikan internet lancar.</p>`;
+      }
+      elBtnAnalisis.disabled = false; 
+    });
+
+    // =========================================
+    // 9. JALANKAN INISIALISASI SAAT HALAMAN DIBUKA
+    // =========================================
+    muatDaftarSurah();
+    muatSurah(1, 0); 
+  </script>
+
+  <!-- Registrasi Service Worker PWA -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((registration) => {
+            console.log('Service Worker berhasil didaftarkan:', registration.scope);
+          })
+          .catch((error) => {
+            console.log('Pendaftaran Service Worker gagal:', error);
+          });
+      });
+    }
+  </script>
+</body>
+</html>

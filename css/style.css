@@ -1,0 +1,57 @@
+/* Styling Dasar Container Buku */
+body {
+  background-color: #2c3e50; /* Warna latar belakang luar buku */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+.book-container {
+  display: flex;
+  width: 90vw;
+  max-width: 1000px;
+  height: 80vh;
+  background-color: #f4ecd8; /* Warna kertas krem */
+  box-shadow: 0 10px 30px #1a252f; /* Menggunakan warna solid untuk bayangan luar */
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.page {
+  flex: 1;
+  position: relative;
+  padding: 40px;
+  box-sizing: border-box;
+}
+
+.left-page {
+  border-right: 1px solid #dcd1ba; /* Menggunakan warna solid hex */
+}
+
+/* Efek Lipatan Buku (Gradien warna solid hex) */
+.fold-shadow-left {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 40px;
+  height: 100%;
+  background: linear-gradient(to right, #f4ecd8, #dcd1ba); 
+}
+
+.fold-shadow-right {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40px;
+  height: 100%;
+  background: linear-gradient(to left, #f4ecd8, #dcd1ba);
+}
+
+.arabic-text {
+  font-size: 28px;
+  line-height: 2;
+  text-align: right;
+}
